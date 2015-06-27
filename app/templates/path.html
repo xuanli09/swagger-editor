@@ -1,5 +1,5 @@
 <li class="path">
-  <header ng-click="$parent.toggle(['paths', path.pathName])">
+  <header ng-click="toggleFold(['paths', path.pathName])">
     <h2>
       <a>{{path.pathName}}</a>
     </h2>
@@ -8,8 +8,7 @@
     </span>
     <a class="jump-to-yaml" ng-click="focusEdit($event, ['paths', path.pathName])" tooltip-placement="left" tooltip="Jump to YAML" tooltip-trigger="mouseenter"></a>
   </header>
-  <ul class='operations' collapse-when="$parent.isCollapsed(['paths', path.pathName])">
+  <ul class='operations' collapse-when="isFolded(['paths', path.pathName])">
     <operation ng-repeat="operation in path.operations track by $index" ng-if="!isVendorExtension(operation.operationName)"></operation>
   </ul>
 </li>
-

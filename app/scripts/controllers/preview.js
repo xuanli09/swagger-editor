@@ -2,7 +2,8 @@
 
 SwaggerEditor.controller('PreviewCtrl', function PreviewCtrl(Storage, Builder,
   ASTManager, Sorter, Editor, BackendHealthCheck, FocusedPath, TagManager,
-  Preferences, $scope, $rootScope, $stateParams, $sessionStorage) {
+  Preferences, FoldStateManager, $scope, $rootScope, $stateParams,
+  $sessionStorage) {
   $sessionStorage.$default({securityKeys: {}});
   var securityKeys = $sessionStorage.securityKeys;
   var SparkMD5 = (window.SparkMD5);
@@ -98,6 +99,11 @@ SwaggerEditor.controller('PreviewCtrl', function PreviewCtrl(Storage, Builder,
 
   Storage.addChangeListener('yaml', update);
 
+  /**
+   * Load the latest spec from storage
+   * this is used for when live-update is tuned-off. This method will load the
+   * latest spec intor the preview
+   */
   $scope.loadLatest = function () {
     Storage.load('yaml').then(function (latest) {
       update(latest, true);
@@ -105,22 +111,16 @@ SwaggerEditor.controller('PreviewCtrl', function PreviewCtrl(Storage, Builder,
     $rootScope.isDirty = false;
   };
 
-  // If app is in preview mode, load the yaml from storage
-  if ($rootScope.mode === 'preview') {
-    $scope.loadLatest();
-  }
 
+  // Fold state
+  // TODO: move to FoldStateManager
   ASTManager.onFoldStatusChanged(function () {
     _.defer(function () { $scope.$apply(); });
   });
-  $scope.isCollapsed = ASTManager.isFolded;
-  $scope.isAllFolded = ASTManager.isAllFolded;
-  $scope.toggle = function (path) {
-    ASTManager.toggleFold(path, Editor);
-  };
-  $scope.toggleAll = function (path) {
-    ASTManager.setFoldAll(path, true, Editor);
-  };
+  $scope.isFolded = FoldStateManager.isFolded;
+  $scope.toggleFold = FoldStateManager.toggleFold;
+  $scope.isAllFolded = FoldStateManager.isAllFolded;
+  $scope.toggleFoldAll = FoldStateManager.toggleFoldAll;
 
   $scope.tagIndexFor = TagManager.tagIndexFor;
   $scope.getAllTags = TagManager.getAllTags;
@@ -164,13 +164,6 @@ SwaggerEditor.controller('PreviewCtrl', function PreviewCtrl(Storage, Builder,
   };
 
   /*
-  ** get a subpath for edit
-  */
-  $scope.getEditPath = function (pathName) {
-    return '#/paths?path=' + window.encodeURIComponent(pathName);
-  };
-
-  /*
    * Response CSS class for an HTTP response code
    *
    * @param {number} code - The HTTP Response CODE
@@ -204,7 +197,7 @@ SwaggerEditor.controller('PreviewCtrl', function PreviewCtrl(Storage, Builder,
    * @returns {boolean}
   */
   $scope.isVendorExtension = function (key) {
-    return angular.isString(key) && key.substring(0, 2).toLowerCase() === 'x-';
+    return _.startsWith(key, 'x-');
   };
 
   /*

@@ -1,11 +1,11 @@
 <div class="security" ng-controller="SecurityCtrl">
   <header>
     <h3 class="section-header">
-      <a ng-click="toggle(['security'])">Security</a>
+      <a ng-click="toggleFold(['securityDefinitions'])">Security</a>
     </h3>
   </header>
 
-  <div class="security-definitions" collapse-when="isCollapsed(['security'])">
+  <div class="security-definitions" collapse-when="isFolded(['securityDefinitions'])">
     <div ng-repeat="(securityDefinitionName, securityDefinition) in specs.securityDefinitions" class="security-definition {{securityDefinition.type}}">
       <header>
         <h4>
@@ -14,7 +14,9 @@
           <span class="security-type">({{getHumanSecurityType(securityDefinition.type)}})</span>
           <div class="authentication">
             <div>
-              <button ng-click="authenticate(securityDefinitionName, securityDefinition)" class="authenticate">{{isAuthenticated(securityDefinitionName) ? 'Change Authentication' : 'Authenticate'}}</button>
+              <button ng-click="authenticate(securityDefinitionName, securityDefinition)"class="authenticate">
+                {{isAuthenticated(securityDefinitionName) ? 'Change Authentication' : 'Authenticate'}}
+              </button>
             </div>
           </div>
         </h4>
@@ -59,4 +61,3 @@
     </div>
   </div>
 </div>
-

@@ -1,4 +1,10 @@
-<div class="root tags">
+<header>
+  <h3 class="section-header">
+    <a ng-click="toggleFold(['tags'])">Tags</a>
+  </h3>
+</header>
+
+<section collapse-when="isFolded(['tags'])" class="root tags">
   <div class="filtered" ng-if="stateParams.tags">
     <p>Showing only operations with following tag{{getCurrentTags().length === 1 ? '' : 's'}}:</p>
     <span class="tag tag-color-{{tagIndexFor(tag)}}" ng-repeat="tag in getCurrentTags() track by $index">{{tag}}
@@ -18,4 +24,4 @@
       </tr>
     </table>
   </div>
-</div>
+</section>

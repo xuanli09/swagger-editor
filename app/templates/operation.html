@@ -6,7 +6,7 @@
     <div class="deprecated" ng-if="operation.deprecated">Deprecated</div>
   </header>
 
-  <div class='content' collapse-when="isCollapsed(['paths', path.pathName, operation.operationName])">
+  <div class='content' collapse-when="isFolded(['paths', path.pathName, operation.operationName])">
     <div class="tags">
       <span class="tag tag-color-{{tagIndexFor(tag)}}" ng-repeat="tag in operation.tags track by $index">{{tag}}</span>
     </div>

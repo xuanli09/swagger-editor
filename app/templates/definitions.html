@@ -1,0 +1,26 @@
+<header ng-if="specs.definitions">
+  <h3 class="section-header">
+    <a ng-click="toggleFold(['definitions'])">Models</a>
+
+    <span class="on-hover">
+      <a ng-click="toggleFoldAll(['definitions', '*'])" ng-hide="isAllFolded(['definitions', '*'])">List all models</a>
+    </span>
+  </h3>
+</header>
+
+ <ul class="section-content definitions" ng-if="showDefinitions(specs.definitions)"
+   collapse-when="isFolded(['definitions'])" class="models">
+
+    <li class="definition" ng-repeat="(modelName, model) in specs.definitions"
+      ng-if="!isVendorExtension(modelName)" scroll-into-view-when="isInFocus(['definitions', modelName])">
+
+      <h4>
+        <a ng-click="toggleFold(['definitions', modelName])" class="definition-title">{{modelName}}</a>
+      </h4>
+
+      <div  collapse-when="isFolded(['definitions', modelName])">
+        <schema-model schema="model"></schema-model>
+      </div>
+    </li>
+  </ul>
+</div>
