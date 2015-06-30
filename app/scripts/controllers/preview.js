@@ -111,7 +111,6 @@ SwaggerEditor.controller('PreviewCtrl', function PreviewCtrl(Storage, Builder,
     $rootScope.isDirty = false;
   };
 
-
   // Fold state
   // TODO: move to FoldStateManager
   ASTManager.onFoldStatusChanged(function () {
