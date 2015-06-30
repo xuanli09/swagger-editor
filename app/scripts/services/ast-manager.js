@@ -337,7 +337,7 @@ SwaggerEditor.service('ASTManager', function ASTManager($log) {
    *   in the AST
    * @returns {boolean} - true if all nodes are folded, false, otherwise
   */
-  this.isAllFolded = function (path) {
+  this.isFolded = function (path) {
     var node = walk(path);
     var subNode;
 

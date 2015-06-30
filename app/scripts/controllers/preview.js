@@ -118,8 +118,6 @@ SwaggerEditor.controller('PreviewCtrl', function PreviewCtrl(Storage, Builder,
   });
   $scope.isFolded = FoldStateManager.isFolded;
   $scope.toggleFold = FoldStateManager.toggleFold;
-  $scope.isAllFolded = FoldStateManager.isAllFolded;
-  $scope.toggleFoldAll = FoldStateManager.toggleFoldAll;
 
   $scope.tagIndexFor = TagManager.tagIndexFor;
   $scope.getAllTags = TagManager.getAllTags;

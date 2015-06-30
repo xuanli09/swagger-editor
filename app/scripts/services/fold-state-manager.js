@@ -29,6 +29,19 @@ SwaggerEditor.service('FoldStateManager', function FoldStateManager() {
     foldState = defaultState;
   }
 
+  /**
+   * invoke change listeners
+   */
+  function invokeChangeListeners() {
+    var args = arguments;
+
+    localStorage.setItem('foldState', JSON.stringify(foldState));
+
+    changeListeners.forEach(function (fn) {
+      fn.apply(null, args);
+    });
+  }
+
   /*
    * Returns a node from the foldState tree with a given path
    * if key is not found, it will create the key in foldState tree.
@@ -56,160 +69,6 @@ SwaggerEditor.service('FoldStateManager', function FoldStateManager() {
       }
     }
     return current;
-  }
-
-  /**
-   * invoke change listeners
-   */
-  function invokeChangeListeners() {
-    var args = arguments;
-
-    localStorage.setItem('foldState', JSON.stringify(foldState));
-
-    changeListeners.forEach(function (fn) {
-      fn.apply(null, args);
-    });
-  }
-
-  /*
-   * Folds a node at a specific path
-   *
-   * @param {array<string>} path - the path to the specific node
-   * @param {boolean} value - optional. If true for setting fold status to
-   *   folded. If value is false it will be set the folded state to unfolded.
-   *   If value is not provided, it will toggle the fold state
-  */
-  function changeFold(path, value) {
-    var node = walkToNode(path);
-
-    // if node doesn't exists silently ignore the operation
-    if (node) {
-
-      // if vlaue is not provided, toggle
-      if (value === undefined) {
-        value = !node.$folded;
-      }
-
-      node.$folded = value;
-      invokeChangeListeners(node, value);
-    }
-  }
-
-  /**
-   * Folds a node
-   * @param  {array<string>} path - an array of keys to rach to the node
-  */
-  function fold(path) {
-    if (!_.isArray(path)) {
-      throw new TypeError('path should be an array.');
-    }
-
-    changeFold(path, true);
-  }
-
-  /**
-   * Unfolds a node
-   * @param  {array<string>} path - an array of keys to rach to the node
-  */
-  function unfold(path) {
-    if (!_.isArray(path)) {
-      throw new TypeError('path should be an array.');
-    }
-
-    changeFold(path, false);
-  }
-
-  /**
-   * Toggles the fold state of a node
-   * @param {array<string>} path - array of keys to rach to the node
-  */
-  function toggleFold(path) {
-    if (!_.isArray(path)) {
-      throw new TypeError('path should be an array.');
-    }
-
-    changeFold(path);
-  }
-
-  /**
-   * Toggle fold state of all nodes that match the path
-   * @param {array<string>} path - array of keys/wildcards to rach to the node
-  */
-  function toggleFoldAll(path) {
-    visit(path, function(node) {
-      node.$folded = !node.$folded;
-    });
-
-    invokeChangeListeners();
-  }
-
-  /**
-   * Determines if a node is folded
-   * @param {array<string>} path - array of keys/wildcards to rach to the node
-   * @return {Boolean} true if node is folded, false otherwise
-   *
-  */
-  function isFolded(path) {
-    if (!_.isArray(path)) {
-      throw new TypeError('path should be an array.');
-    }
-
-    var node = walkToNode(path);
-
-    if (node) {
-      return node.$folded;
-    }
-  }
-
-  /**
-   * Determines if all nodes matching path are folded
-   * @param {array<string>} path - array of keys/wildcards to rach to the node
-   * @return {Boolean} [description]
-  */
-  function isAllFolded(path) {
-    if (!_.isArray(path)) {
-      throw new TypeError('path should be an array.');
-    }
-
-    if (_.last(path) !== '*') {
-      throw new Error('Path should end with "*" in this method.');
-    }
-
-    var pathToRoot = path.slice(0, path.indexOf('*'));
-    var restOfPath = path.slice(path.indexOf('*'));
-
-    // get the root node that has all of our desired nodes in it
-    var root = walkToNode(pathToRoot);
-
-    // if the root node doesn't exist, return false
-    if (!_.isObject(root)) {
-      return false;
-    }
-
-    // return true if all nodes directly under the root node are folded.
-    return Object.keys(root).every(function (nodeName) {
-
-      // ignore the "$folded" key
-      if (nodeName === '$folded') {
-        return true;
-      }
-
-      // construct the path to this node and get the node from the foldState
-      var node = walkToNode(path.splice(0, -1).concat([nodeName]));
-
-      // if no node was found mark result as false
-      if (!node) {
-        return false;
-      }
-
-      // TODO: comment what the heck is going on
-      if (_.isEqual(restOfPath, ['*'])) {
-        return !node.$folded;
-      } else {
-        return isAllFolded(pathToRoot.concat([nodeName]
-          .concat(restOfPath.slice(1))));
-      }
-    });
   }
 
   /**
@@ -268,6 +127,54 @@ SwaggerEditor.service('FoldStateManager', function FoldStateManager() {
   }
 
   /**
+   * Folds node(s)
+   * @param  {array<string>} path - an array of keys to rach to the node
+  */
+  function fold(path) {
+    visit(path, function (node) {
+      node.$folded = true;
+    });
+  }
+
+  /**
+   * Unfolds node(s)
+   * @param  {array<string>} path - an array of keys to rach to the node
+  */
+  function unfold(path) {
+    visit(path, function (node) {
+      node.$folded = false;
+    });
+  }
+
+  /**
+   * Toggles the fold state node(s)
+   * @param {array<string>} path - array of keys to rach to the node
+  */
+  function toggleFold(path) {
+    visit(path, function (node) {
+      node.$folded = !node.$folded;
+    });
+  }
+
+  /**
+   * Determines if a node is folded
+   * @param {array<string>} path - array of keys/wildcards to rach to the node
+   * @return {Boolean} true if node is folded, false otherwise
+   *
+  */
+  function isFolded(path) {
+    var result = false;
+
+    visit(path, function (node) {
+      if (node.$folded) {
+        result = true;
+      }
+    });
+
+    return result;
+  }
+
+  /**
    * Adds a change listener for when a fold state changes in the foldState tree
    * @param  {Function} fn the callback function
    */
@@ -285,9 +192,7 @@ SwaggerEditor.service('FoldStateManager', function FoldStateManager() {
   this.fold = fold;
   this.unfold = unfold;
   this.toggleFold = toggleFold;
-  this.toggleFoldAll = toggleFoldAll;
   this.isFolded = isFolded;
-  this.isAllFolded = isAllFolded;
   this.onFoldChanged = onFoldChanged;
   this.reset = reset;
 });
