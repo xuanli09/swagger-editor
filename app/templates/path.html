@@ -4,7 +4,7 @@
       <a>{{path.pathName}}</a>
     </h2>
     <span class="on-hover">
-      <a ng-click="toggleAll(['paths', path.pathName])" ng-hide="isFolded(['paths', path.pathName, '*']) || isCollapsed(['paths', path.pathName])" stop-event>List all operations</a>
+      <a ng-click="toggleFold(['paths', path.pathName])" ng-hide="isFolded(['paths', path.pathName, ALL]) || isCollapsed(['paths', path.pathName])" stop-event>List all operations</a>
     </span>
     <a class="jump-to-yaml" ng-click="focusEdit($event, ['paths', path.pathName])" tooltip-placement="left" tooltip="Jump to YAML" tooltip-trigger="mouseenter"></a>
   </header>

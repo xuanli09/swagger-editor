@@ -9,6 +9,7 @@ describe('Service: FoldStateManager', function () {
   var FoldStateManager;
   beforeEach(inject(function (_FoldStateManager_) {
     FoldStateManager = _FoldStateManager_;
+    window.localStorage.clear();
   }));
 
   describe('defaults', function () {
@@ -24,22 +25,61 @@ describe('Service: FoldStateManager', function () {
       expect(FoldStateManager.isFolded(['info'])).to.equal(true);
     });
 
+    it('unfolds ["info"]', function () {
+      FoldStateManager.unfold(['info']);
+
+      expect(FoldStateManager.isFolded(['info'])).to.equal(false);
+    });
+
+    it('unfolds ["info"]', function () {
+      FoldStateManager.toggleFold(['info']);
+
+      expect(FoldStateManager.isFolded(['info'])).to.equal(true);
+    });
+
     it('adds a path by checking if it is folded', function () {
+      // Add new paths
       FoldStateManager.isFolded(['paths', '/foo']);
+      FoldStateManager.isFolded(['paths', '/bar']);
+      FoldStateManager.isFolded(['paths', '/baz']);
 
       expect(FoldStateManager.isFolded(['paths', '/foo'])).to.equal(false);
+      expect(FoldStateManager.isFolded(['paths', '/bar'])).to.equal(false);
+      expect(FoldStateManager.isFolded(['paths', '/baz'])).to.equal(false);
     });
 
     it('folds all paths', function () {
-      FoldStateManager.fold(['paths', '*']);
+      // Add new paths
+      FoldStateManager.isFolded(['paths', '/foo']);
+      FoldStateManager.isFolded(['paths', '/bar']);
+      FoldStateManager.isFolded(['paths', '/baz']);
 
-      expect(FoldStateManager.isFolded(['paths', '*'])).to.equal(true);
+      FoldStateManager.fold(['paths', /./]);
+
+      expect(FoldStateManager.isFolded(['paths', /./])).to.equal(true);
     });
 
     it('unfolds all paths', function () {
-      FoldStateManager.unfold(['paths', '*']);
+      // Add new paths
+      FoldStateManager.isFolded(['paths', '/foo']);
+      FoldStateManager.isFolded(['paths', '/bar']);
+      FoldStateManager.isFolded(['paths', '/baz']);
 
-      expect(FoldStateManager.isFolded(['paths', '*'])).to.equal(false);
+      FoldStateManager.unfold(['paths', /./]);
+
+      expect(FoldStateManager.isFolded(['paths', /./])).to.equal(false);
+    });
+
+    it('toggle folds all paths', function () {
+      // Add new paths
+      FoldStateManager.isFolded(['paths', '/foo']);
+      FoldStateManager.isFolded(['paths', '/bar']);
+      FoldStateManager.isFolded(['paths', '/baz']);
+
+      FoldStateManager.toggleFold(['paths', /./]);
+
+      expect(FoldStateManager.isFolded(['paths', '/bar'])).to.equal(true);
+      expect(FoldStateManager.isFolded(['paths', /./])).to.equal(true);
     });
   });
 });

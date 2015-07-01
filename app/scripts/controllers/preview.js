@@ -8,6 +8,9 @@ SwaggerEditor.controller('PreviewCtrl', function PreviewCtrl(Storage, Builder,
   var securityKeys = $sessionStorage.securityKeys;
   var SparkMD5 = (window.SparkMD5);
 
+  // Expose "ALL" regex for using in fold status queries
+  $scope.ALL = new RegExp('.');
+
   /*
    * Reacts to updates of YAML in storage that usually triggered by editor
    * changes

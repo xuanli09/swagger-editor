@@ -13,13 +13,11 @@ SwaggerEditor.service('FoldStateManager', function FoldStateManager() {
   var changeListeners = new Set();
 
   var defaultState = {
-    foldState: {
-      info: {$folded: false},
-      securityDefinitions: {$folded: false},
-      tags: {$folded: false},
-      paths: {$folded: false},
-      definitions: {$folded: false}
-    }
+    info: {$folded: false},
+    securityDefinitions: {$folded: false},
+    tags: {$folded: false},
+    paths: {$folded: false},
+    definitions: {$folded: false}
   };
 
   // set fold state of all root nodes to false as their default value
@@ -42,23 +40,42 @@ SwaggerEditor.service('FoldStateManager', function FoldStateManager() {
     });
   }
 
-  /*
-   * Returns a node from the foldState tree with a given path
-   * if key is not found, it will create the key in foldState tree.
-   *
-   * @param {array<string>} path - the path to the specific node
-  */
-  function walkToNode(path) {
-    var current = foldState;
+  /**
+   * visit nodes addressed with a path and execute fn function on them
+   * @param  {array<string>}    path - array of keys/wildcards to node(s)
+   * @param  {Function} fn      function to invoke on node(s)
+   * @param  {object} context   the current foldState tree
+   */
+  function visit(path, fn, context) {
+    if (!_.isArray(path)) {
+      throw new TypeError('path should be an array.');
+    }
+
+    var current = context || foldState;
     var previus = current;
     var key;
+
+    function visitCurrentPath(key) {
+      if (key !== '$folded') {
+        visit(path, fn, current[key]);
+      }
+    }
+
+    function filterByRegex(regex) {
+      return function filter(item) {
+        return regex.test(item);
+      };
+    }
 
     while (path.length) {
       previus = current;
       key = path.shift();
 
-      if (key === '*') {
-        throw new Error('key can not be a wildcard.');
+      if (_.isRegExp(key)) {
+        Object.keys(current)
+          .filter(filterByRegex(key))
+          .forEach(visitCurrentPath);
+        return;
       }
 
       current = current[key];
@@ -68,62 +85,7 @@ SwaggerEditor.service('FoldStateManager', function FoldStateManager() {
         current = previus;
       }
     }
-    return current;
-  }
-
-  /**
-   * visit nodes addressed with a path and execute fn function on them
-   * @param  {array<string>}   path - array of keys/wildcards to node(s)
-   * @param  {Function} fn   function to invoke on node(s)
-   */
-  function visit(path, fn) {
-    if (!_.isArray(path)) {
-      throw new TypeError('path should be an array.');
-    }
-
-    // if path is not pointing to multiple nodes, simply use walkToNode
-    if (_.last(path) !== '*') {
-      var node = walkToNode(path);
-      if (node) {
-        fn(node);
-      }
-      return;
-    }
-
-    // otherwise, split the path between explict paths and wildcards
-    var pathToRoot = path.slice(0, path.indexOf('*'));
-    var restOfPath = path.slice(path.indexOf('*'));
-
-    // get the root node that has all of our desired nodes in it
-    var root = walkToNode(pathToRoot);
-
-    // if the root node doesn't exist, return
-    if (!_.isObject(root)) {
-      return;
-    }
-
-    // for each direct child, change the fold status
-    Object.keys(root).forEach(function (nodeName) {
-
-      // ignore the "$folded" key
-      if (nodeName === '$folded') {
-        return;
-      }
-
-      // construct the path to this node and get the node from the foldState
-      var node = walkToNode(path.splice(0, -1).concat([nodeName]));
-
-      // if it's the last wildcard, invoke fn with current node
-      if (_.isEqual(restOfPath, ['*'])) {
-        fn(node);
-      } else {
-
-        // replace current nodeName with current wildcard to construct a new
-        // path
-        var newPath = pathToRoot.concat([nodeName].concat(restOfPath.slice(1)));
-        visit(newPath, fn);
-      }
-    });
+    fn(current);
   }
 
   /**
@@ -134,6 +96,8 @@ SwaggerEditor.service('FoldStateManager', function FoldStateManager() {
     visit(path, function (node) {
       node.$folded = true;
     });
+
+    invokeChangeListeners();
   }
 
   /**
@@ -144,6 +108,8 @@ SwaggerEditor.service('FoldStateManager', function FoldStateManager() {
     visit(path, function (node) {
       node.$folded = false;
     });
+
+    invokeChangeListeners();
   }
 
   /**
@@ -154,6 +120,8 @@ SwaggerEditor.service('FoldStateManager', function FoldStateManager() {
     visit(path, function (node) {
       node.$folded = !node.$folded;
     });
+
+    invokeChangeListeners();
   }
 
   /**
@@ -163,15 +131,22 @@ SwaggerEditor.service('FoldStateManager', function FoldStateManager() {
    *
   */
   function isFolded(path) {
-    var result = false;
+    var folded = false;
+    var isSingleNode = true;
 
     visit(path, function (node) {
       if (node.$folded) {
-        result = true;
+        folded = true;
       }
+
+      if (!isSingleNode & !node.$folded) {
+        folded = false;
+      }
+
+      isSingleNode = false;
     });
 
-    return result;
+    return folded;
   }
 
   /**
