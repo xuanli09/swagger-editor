@@ -32,7 +32,7 @@ SwaggerEditor.controller('MainCtrl', function MainCtrl(
 
       // If there is no saved YAML either, load the default example
       } else if (!yaml) {
-        url = defaults.examplesFolder + defaults.exampleFiles[0];
+				assign(' ');
       }
 
       if (url) {
@@ -50,7 +50,7 @@ SwaggerEditor.controller('MainCtrl', function MainCtrl(
     if (yaml) {
       Storage.save('yaml', yaml);
       $rootScope.editorValue = yaml;
-    }
+		}
   }
 
   // ----------------------- File drag and drop --------------------------------
